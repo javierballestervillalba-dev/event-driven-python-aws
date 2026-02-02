@@ -15,12 +15,16 @@ def handler(event, context):
         validate_event(event)
 
         event_type = event["type"]
+        payload = event["payload"]
 
-        if event_type == "UserRegistered":
-            handle_user_registered(event["payload"])
+        handler_fn = EVENT_HANDLERS.get(event_type)
 
-        elif event_type == "OrderCreated":
-            handle_order_created(event["payload"])
+        if not handler_fn:
+            raise EventValidationError(
+                f"No handler registered for event type '{event_type}'"
+            )
+
+        handler_fn(payload)
 
         logger.info("Event processed successfully")
         return {"statusCode": 200, "body": "ok"}
@@ -44,6 +48,11 @@ def handle_order_created(payload: dict) -> None:
     logger.info(
         f"Handling OrderCreated | order_id={payload.get('order_id')} amount={payload.get('amount')}"
     )
+
+EVENT_HANDLERS = {
+    "UserRegistered": handle_user_registered,
+    "OrderCreated": handle_order_created,
+}
 
 
 
