@@ -1,18 +1,51 @@
 from app.logger import get_logger
 from app.config import settings, ConfigError
+from app.events import validate_event, EventValidationError
+
 
 logger = get_logger(__name__)
 
 def handler(event, context):
     """
     AWS Lambda entrypoint.
-    event: dict
-    context: Lambda ciontext object
     """
-    logger.info(f"Lambda invoked | event={event}")
+    try:
+        logger.info(f"Event received | event={event}")
 
-    #Por ahora solo devolvemos OK
-    return {"statusCode": 200, "body": "ok"}
+        validate_event(event)
+
+        event_type = event["type"]
+
+        if event_type == "UserRegistered":
+            handle_user_registered(event["payload"])
+
+        elif event_type == "OrderCreated":
+            handle_order_created(event["payload"])
+
+        logger.info("Event processed successfully")
+        return {"statusCode": 200, "body": "ok"}
+
+    except EventValidationError as e:
+        logger.error(f"Invalid event: {e}")
+        return {"statusCode": 400, "body": str(e)}
+
+    except Exception as e:
+        logger.exception("Unhandled error processing event")
+        return {"statusCode": 500, "body": "internal error"}
+    
+
+def handle_user_registered(payload: dict) -> None:
+    logger.info(
+        f"Handling UserRegistered | user_id={payload.get('user_id')}"
+    )
+
+
+def handle_order_created(payload: dict) -> None:
+    logger.info(
+        f"Handling OrderCreated | order_id={payload.get('order_id')} amount={payload.get('amount')}"
+    )
+
+
 
 def main() -> None:
     try:
