@@ -23,6 +23,7 @@ This service follows an event-driven design:
     "amount": 49.90
   }
 }
+```
 
 ## Run Locally
 
@@ -30,17 +31,19 @@ Activate the virtual environment:
 
 ```bash
 venv\Scripts\Activate.ps1
+```
 
 Run the service locally:
 
 ```bash
 python -m app.main
+```
 
 Invoke the Lambda-style handler manually:
 
 ```bash
 python -c "from app.main import handler; print(handler({...}, None))"
-
+```
 
 ## Tests
 
@@ -52,8 +55,9 @@ Tests are written using pytest and cover:
 
 Run tests with:
 
+```bash
 pytest
-
+```
 
 ## Design Decisions
 
