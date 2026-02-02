@@ -14,7 +14,7 @@ This service follows an event-driven design:
 
 ## Event Contract Example
 
-
+```json
 {
   "source": "ecommerce.orders",
   "type": "OrderCreated",
@@ -28,14 +28,17 @@ This service follows an event-driven design:
 
 Activate the virtual environment:
 
+```bash
 venv\Scripts\Activate.ps1
 
 Run the service locally:
 
+```bash
 python -m app.main
 
 Invoke the Lambda-style handler manually:
 
+```bash
 python -c "from app.main import handler; print(handler({...}, None))"
 
 
