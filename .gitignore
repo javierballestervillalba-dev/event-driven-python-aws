@@ -9,3 +9,8 @@ venv/
 # OS / editors
 .DS_Store
 .vscode/
+
+#Carpeta de Lambda
+lambda_package/
+lambda.zip
+
