@@ -5,10 +5,28 @@ from app.events import validate_event, EventValidationError
 
 logger = get_logger(__name__)
 
+def is_s3_event(event: dict) -> bool:
+        return isinstance(event, dict) and "Records" in event
+
+
+def parse_s3_event(event: dict) -> dict:
+    record = event["Records"][0]
+    bucket = record["s3"]["bucket"]["name"]
+    key = record["s3"]["object"]["key"]
+    return {"bucket": bucket, "key": key}
+
+
 def handler(event, context):
     """
     AWS Lambda entrypoint.
     """
+    if is_s3_event(event):
+        info = parse_s3_event(event)
+        logger.info(
+            f"S3 event received | bucket={info['bucket']} key={info['key']}"
+        )
+        return {"statusCode": 200, "body": "s3 ok"}
+
     try:
         logger.info(f"Event received | event={event}")
 
