@@ -12,5 +12,3 @@ venv/
 
 #Carpeta de Lambda
 lambda.zip
-build_lambda_zip.py
-lambda_wrapper/
