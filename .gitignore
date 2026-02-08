@@ -11,6 +11,6 @@ venv/
 .vscode/
 
 #Carpeta de Lambda
-lambda_package/
 lambda.zip
-
+build_lambda_zip.py
+lambda_wrapper/

@@ -1,9 +1,17 @@
+import boto3
+import csv
+import io
+
 from app.logger import get_logger
 from app.config import settings, ConfigError
 from app.events import validate_event, EventValidationError
 
 
+
 logger = get_logger(__name__)
+
+s3_client = boto3.client("s3")
+
 
 def is_s3_event(event: dict) -> bool:
         return isinstance(event, dict) and "Records" in event
@@ -20,13 +28,36 @@ def handler(event, context):
     """
     AWS Lambda entrypoint.
     """
+    # 🟢 1. EVENTO S3
     if is_s3_event(event):
         info = parse_s3_event(event)
         logger.info(
             f"S3 event received | bucket={info['bucket']} key={info['key']}"
         )
-        return {"statusCode": 200, "body": "s3 ok"}
+        response = s3_client.get_object(
+            Bucket=info["bucket"],
+            Key=info["key"]
+        )
 
+        content = response["Body"].read().decode("utf-8")
+
+        logger.info(f"File content:\n{content}")
+
+        #Proceso el csv
+        reader = csv.DictReader(io.StringIO(content))
+
+        total = 0
+        for row in reader:
+            amount = int(row["amount"])
+            total += amount
+
+        logger.info(f"Total amount: {total}")
+
+
+        return {"statusCode": 200, "body": "s3 processed"}
+    
+    
+    # 🟡 2. EVENTOS CUSTOM
     try:
         logger.info(f"Event received | event={event}")
 
