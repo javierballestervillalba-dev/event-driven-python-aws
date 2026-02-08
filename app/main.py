@@ -7,6 +7,20 @@ from app.S3_processor import is_s3_event, parse_s3_event, process_s3_object
 logger = get_logger(__name__)
 
 
+def handle_user_registered(payload: dict) -> None:
+    logger.info(
+        f"Handling UserRegistered | user_id={payload.get('user_id')}"
+    )
+
+def handle_order_created(payload: dict) -> None:
+    logger.info(
+        f"Handling OrderCreated | order_id={payload.get('order_id')} amount={payload.get('amount')}"
+    )
+
+EVENT_HANDLERS = {
+    "UserRegistered": handle_user_registered,
+    "OrderCreated": handle_order_created,
+}
 
 def handler(event, context):
 
@@ -16,8 +30,10 @@ def handler(event, context):
 
     # 1) S3 event
     if is_s3_event(event):
+        logger.info(f"Routing to S3 processor | request_id={request_id}")
         info = parse_s3_event(event)
-        result = process_s3_object(info["bucket"], info["key"])
+        result = process_s3_object(info)
+        logger.info(f"End S3 | request_id={request_id} result={result}")
         return {"statusCode": 200, "body": f"s3 processed {result}"}
 
     # 2) Custom events
@@ -26,11 +42,15 @@ def handler(event, context):
         event_type = event["type"]
         payload = event["payload"]
 
+        logger.info(f"Routing custom event | type={event_type} request_id={request_id}")
+
         handler_fn = EVENT_HANDLERS.get(event_type)
         if not handler_fn:
             raise EventValidationError(f"No handler registered for '{event_type}'")
 
         handler_fn(payload)
+
+        logger.info(f"End custom | request_id={request_id} type={event_type}")
         return {"statusCode": 200, "body": "ok"}
 
     except EventValidationError as e:
@@ -41,20 +61,7 @@ def handler(event, context):
         return {"statusCode": 500, "body": "internal error"}
     
 
-def handle_user_registered(payload: dict) -> None:
-    logger.info(
-        f"Handling UserRegistered | user_id={payload.get('user_id')}"
-    )
 
-
-def handle_order_created(payload: dict) -> None:
-    logger.info(
-        f"Handling OrderCreated | order_id={payload.get('order_id')} amount={payload.get('amount')}"
-    )
-EVENT_HANDLERS = {
-    "UserRegistered": handle_user_registered,
-    "OrderCreated": handle_order_created,
-}
 def main() -> None:
     try:
         logger.info("Service started")
